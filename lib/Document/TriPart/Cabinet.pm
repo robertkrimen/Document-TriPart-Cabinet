@@ -5,7 +5,7 @@ use strict;
 
 =head1 NAME
 
-Document::TriPart::Cabinet - The great new Document::TriPart::Cabinet!
+Document::TriPart::Cabinet -
 
 =head1 VERSION
 
@@ -15,37 +15,52 @@ Version 0.01
 
 our $VERSION = '0.01';
 
-
 =head1 SYNOPSIS
 
-Quick summary of what the module does.
-
-Perhaps a little code snippet.
-
-    use Document::TriPart::Cabinet;
-
-    my $foo = Document::TriPart::Cabinet->new();
-    ...
-
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
-
-=head1 FUNCTIONS
-
-=head2 function1
-
 =cut
 
-sub function1 {
+use Moose;
+
+use Document::TriPart::Cabinet::Document;
+use Document::TriPart::Cabinet::UUID;
+
+use Carp::Clan;
+use Path::Abstract;
+use DateTimeX::Easy;
+use File::Temp;
+use Path::Class;
+
+has storage => qw/is ro required 1/;
+has document_class => qw/is rw required 1/, default => 'Document::TriPart::Cabinet::Document';
+
+sub create {
+    my $self = shift;
+    return $self->inflate_document( uuid => Document::TriPart::Cabinet::UUID->make, @_ );
 }
 
-=head2 function2
+sub inflate_document {
+    my $self = shift;
+    return $self->document_class->new( cabinet => $self, @_ );
+}
 
-=cut
+sub load {
+    my $self = shift;
+    my $uuid = shift;
 
-sub function2 {
+    $uuid = Document::TriPart::Cabinet::UUID->normalize( $uuid );
+    my $document = $self->inflate_document( uuid => $uuid );
+    $document->load();
+    return $document;
+}
+
+sub edit {
+    my $self = shift;
+    my $uuid = shift;
+
+    $uuid = Document::TriPart::Cabinet::UUID->normalize( $uuid );
+    my $document = $self->load( $uuid );
+    $document->edit();
+    return $document;
 }
 
 =head1 AUTHOR
